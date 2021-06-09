@@ -7,40 +7,59 @@
 
 --------------------
 
-# v6-boilerplate-py
-This algoithm is part of the [vantage6](https://vantage6.ai) solution. Vantage6 allowes to execute computations on federated datasets. This repository provides a boilerplate for new algorithms.
+# Federated Utilities
+
+|:warning: priVAcy preserviNg federaTed leArninG infrastructurE for Secure Insight eXchange (VANTAGE6) |
+|------------------|
+| This algorithm is part of [VANTAGE6](https://github.com/IKNL/vantage6). A docker build of this algorithm can be obtained from harbor.vantage6.ai/algorithms/utils |
+
+Collection of tools that can be used on vantage6-nodes.
+
+* `fetch_static_file` - Obtain a static file from the node
+* ...
+
 
 ## Usage
-First clone the repository.
-```bash
-# Clone this repository
-git clone https://github.com/IKNL/v6-boilerplate-py
-```
-Rename the directories to something that fits your algorithm, we use the convention `v6-{name}-{langauge}`. Then you can edit the following files:
-
-### Dockerfile
-Update the `ARG PKG_NAME=...` to the name of your algorithm (preferable the same as the directory name).
-
-### LICENCE
-Determine which license suits your project.
-
-### {algorithm_name}/__init__.py
-Contains all the methods that can be called at the nodes. All __regular__ definitions in this file that have the prefix `RPC_` are callable by an external party. If you define a __master__ method, it should *not* contain the prefix! The __master__ and __regular__ definitions both have there own signature. __Master__ definitions have a __client__ and __data__ argument (and possible some other arguments), while the __regular__ definition only has the __data__ argument. The data argument is a [pandas dataframe](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html?highlight=dataframe#pandas.DataFrame) and the client argument is a `ClientContainerProtocol` or `ClientMockProtocol` from the [vantage6-toolkit](https://github.com/IKNL/vantage6-toolkit). The master and regular definitions signatures should look like:
 ```python
-def some_master_name(client, data, *args, **kwargs):
-    # do something
-    pass
+from vantage6.client import Client
+from pathlib import Path
 
-def RPC_some_regular_method(data, *args, **kwargs):
-    # do something
-    pass
+# Create, athenticate and setup client
+client = Client("http://127.0.0.1", 5000, "")
+client.authenticate("frank@iknl.nl", "password")
+client.setup_encryption(None)
+
+# Define algorithm input
+input_ = {
+    "method":"fetch_static_file",
+    "args": [],
+    "kwargs": {'filename': 'name_of_the_static_file.txt'} # optional argument
+}
+
+# Send the task to the central server
+task = client.post_task(
+    name="testing",
+    image="harbor2.vantage6.ai/algorithms/utils",
+    collaboration_id=1,
+    input_= input_,
+    organization_ids=[2]
+)
+
+# Retrieve the results
+res = client.task.get(id_=task.get("id"), include_results=True)
 ```
 
-### setup.py
-In order for the Docker image to find the methods the algorithm needs to be installable. Make sure the *name* matches the `ARG PKG_NAME` in the Dockerfile.
+## Node configuration
+The algorithm looks by default in the `/mnt/data` folder for the file. It is possible to let the algorithm use a different folder by specifying the algorithm environment variable `STATIC_FOLDER`. It is also possible to specify a default file name by setting `STATIC_FILENAME`. Note that the user argument `filename` has priority. Add the block `algorithm_env` to the node configuration file to do so:
 
-## Read more
-See the [documentation](https://docs.vantage6.ai/) for detailed instructions on how to install and use the server and nodes.
+```yaml
+  application:
+    ...
+    algorithm_env:
+      STATIC_FOLDER: /mnt/data/some/other/folder
+      STATIC_FILENAME: filename.txt
+    ...
+```
 
 ------------------------------------
 > [vantage6](https://vantage6.ai)
