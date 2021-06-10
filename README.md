@@ -22,7 +22,6 @@ Collection of tools that can be used on vantage6-nodes.
 ## Usage
 ```python
 from vantage6.client import Client
-from pathlib import Path
 
 # Create, athenticate and setup client
 client = Client("http://127.0.0.1", 5000, "")
@@ -37,12 +36,13 @@ input_ = {
 }
 
 # Send the task to the central server
-task = client.post_task(
+task = client.task.create(
     name="testing",
     image="harbor2.vantage6.ai/algorithms/utils",
-    collaboration_id=1,
-    input_= input_,
-    organization_ids=[2]
+    collaboration=1,
+    input= input_,
+    description="Human readable description"
+    organizations=[2]
 )
 
 # Retrieve the results

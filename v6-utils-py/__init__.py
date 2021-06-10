@@ -61,7 +61,7 @@ def RPC_fetch_static_file(_, filename=None):
 
     info('Reading static file')
     try:
-        with open(file_, 'r') as f:
+        with open(file_, 'rb') as f:
             contents = f.read()
     except Exception as e:
         warn(f'Could not read static file {file_}!')
