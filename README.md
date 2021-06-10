@@ -32,21 +32,33 @@ client.setup_encryption(None)
 input_ = {
     "method":"fetch_static_file",
     "args": [],
-    "kwargs": {'filename': 'name_of_the_static_file.txt'} # optional argument
+    "kwargs": {'filename': 'name_of_the_static_file.pdf'} # optional argument
 }
 
 # Send the task to the central server
 task = client.task.create(
     name="testing",
-    image="harbor2.vantage6.ai/algorithms/utils",
+    image="harbor.vantage6.ai/algorithms/utils",
     collaboration=1,
-    input= input_,
-    description="Human readable description"
+    input=input_,
+    description="Human readable description",
     organizations=[2]
 )
 
-# Retrieve the results
-res = client.task.get(id_=task.get("id"), include_results=True)
+# Retrieve the task information
+task_info = client.task.get(
+  id_=task.get("id"),
+  include_results=True
+)
+
+# Retrieve the result (file in this case)
+res = client.result.get(task_info['results'][0]['id'])
+result = res['result']
+
+# Write the bytes to a file
+with open('name_of_the_static_file.pdf', 'wb') as f:
+  f.write(result)
+
 ```
 
 ## Node configuration
