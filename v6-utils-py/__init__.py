@@ -14,7 +14,7 @@ from pathlib import Path
 from vantage6.tools.util import info, warn
 
 
-def RPC_fetch_static_file(_, filename=None):
+def RPC_fetch_static_file(_, filename: str = None):
     """ Fetch a static file from the data station
 
     This method allows to fetch a static file from a data station. The node
@@ -39,11 +39,19 @@ def RPC_fetch_static_file(_, filename=None):
     The node can configure a filename, but the user can overwrite this by
     supplying the `filename` as an argument.
 
+    For security reasons it is not possible to transfer `.csv` files using this
+    algorithm.
+
     """
 
     info("Reading environment variable: STATIC_FOLDER")
     folder = os.environ.get('STATIC_FOLDER', '/mnt/data')
     info(f'Using {folder} to search for the file...')
+
+    # check that we are the request is not using a *.csv file
+    if filename.endswith('.csv'):
+        info('CSV file requested by user. This is not permitted!')
+        return {'msg': 'It is not allowed to transfer a csv file...'}
 
     if not filename:
         info("No filename provided by the user. Looking for an environment "
@@ -69,8 +77,3 @@ def RPC_fetch_static_file(_, filename=None):
 
     info('Writing contents to output file')
     return contents
-
-
-
-
-
