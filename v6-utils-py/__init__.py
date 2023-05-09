@@ -77,3 +77,31 @@ def RPC_fetch_static_file(_, filename: str = None):
 
     info('Writing contents to output file')
     return contents
+
+
+def RPC_list_static_files(_) -> list:
+    """ List all static files in the data station
+
+    This method allows to list all static files in the data station. The node
+    may be configured to set the environment variable STATIC_FOLDER as follows:
+
+    ```yaml
+    application:
+        algorithm_env:
+            STATIC_FOLDER: /mnt/data/some/other/folder
+    ```
+
+    Note that this file should be located in the _data folder from the node
+    docker volume (on Linux this is accesable directly from the host system in
+    `/var/lib/docker/volumes/vantage6-<NODE_NAME>-<SYSTEM_OR_USER>-vol/_data`).
+
+    The node mounts this path at `/mnt/data`, so you should *always* start with
+    /mnt/data
+    """
+    info("Reading environment variable: STATIC_FOLDER")
+    folder = os.environ.get('STATIC_FOLDER', '/mnt/data')
+
+    info(f"Listing static files in: {folder}")
+    files = os.listdir(folder)
+
+    return files
