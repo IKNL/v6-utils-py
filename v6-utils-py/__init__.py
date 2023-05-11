@@ -29,7 +29,7 @@ def RPC_fetch_static_file(_, filename: str = None):
             STATIC_FILENAME: filename.txt
     ```
 
-    Note that this file need to be located in the _data folder from the node
+    Note that this file needs to be located in the _data folder from the node
     docker volume (on Linux this is accesable directly from the host system in
     `/var/lib/docker/volumes/vantage6-<NODE_NAME>-<SYSTEM_OR_USER>-vol/_data`).
 
@@ -52,6 +52,7 @@ def RPC_fetch_static_file(_, filename: str = None):
     if filename.endswith('.csv'):
         info('CSV file requested by user. This is not permitted!')
         return {'msg': 'It is not allowed to transfer a csv file...'}
+        #@TODO implement that you cannot return a database, ipv .csv
 
     if not filename:
         info("No filename provided by the user. Looking for an environment "
@@ -79,29 +80,36 @@ def RPC_fetch_static_file(_, filename: str = None):
     return contents
 
 
-def RPC_list_static_files(_) -> list:
-    """ List all static files in the data station
+def RPC_list_static_files(_, extension: list = None):
+    """ List all static files on the data station
 
-    This method allows to list all static files in the data station. The node
-    may be configured to set the environment variable STATIC_FOLDER as follows:
+    This method returns a dictionary with the filenames and modification 
+    timestamps of all static files in the /mnt/data folder on the node.
 
-    ```yaml
-    application:
-        algorithm_env:
-            STATIC_FOLDER: /mnt/data/some/other/folder
-    ```
+    To only list files with a specific extension use the argument `extension`,
+    e.g. extension = ['.txt'] or extension = ['.txt', '.pdf']
 
-    Note that this file should be located in the _data folder from the node
-    docker volume (on Linux this is accesable directly from the host system in
-    `/var/lib/docker/volumes/vantage6-<NODE_NAME>-<SYSTEM_OR_USER>-vol/_data`).
-
-    The node mounts this path at `/mnt/data`, so you should *always* start with
-    /mnt/data
     """
+
     info("Reading environment variable: STATIC_FOLDER")
     folder = os.environ.get('STATIC_FOLDER', '/mnt/data')
 
     info(f"Listing static files in: {folder}")
-    files = os.listdir(folder)
+    all_files = os.listdir(folder)
 
+    if extension: all_files = [file for file in all_files if file.endswith(tuple(extension))]
+        
+    files = dict()
+    for file in all_files:
+
+        path = os.path.join(folder, file)
+
+        # Cross-platform way to get file modification time in Python. 
+        # Returns the Unix timestamp of when the file was last modified.
+        c_time = os.path.getmtime(path) 
+        dt_c = datetime.datetime.fromtimestamp(c_time)
+
+        files[file] = dt_c.strftime("%Y-%m-%d, %H:%M:%S")
+            
+    info(f"Listed {len(files)} files")
     return files
