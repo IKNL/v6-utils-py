@@ -8,6 +8,7 @@ When a return statement is reached the result is send to the central
 server after encryption by the node.
 """
 import os
+import datetime
 
 from pathlib import Path
 
@@ -112,4 +113,5 @@ def RPC_list_static_files(_, extension: list = None):
         files[file] = dt_c.strftime("%Y-%m-%d, %H:%M:%S")
             
     info(f"Listed {len(files)} files")
+    files = dict(sorted(files.items()))
     return files
