@@ -40,7 +40,7 @@ def RPC_fetch_static_file(_, filename: str = None):
     The node can configure a filename, but the user can overwrite this by
     supplying the `filename` as an argument.
 
-    For security reasons it is not possible to transfer `.csv` files using this
+    For security reasons it is not possible to transfer database files using this
     algorithm.
 
     """
@@ -49,12 +49,17 @@ def RPC_fetch_static_file(_, filename: str = None):
     folder = os.environ.get('STATIC_FOLDER', '/mnt/data')
     info(f'Using {folder} to search for the file...')
 
-    # check that we are the request is not using a *.csv file
-    if filename.endswith('.csv'):
-        info('CSV file requested by user. This is not permitted!')
-        return {'msg': 'It is not allowed to transfer a csv file...'}
-        #@TODO implement that you cannot return a database, ipv .csv
+    # check that the request is not a database file
+    env_labels = dict(os.environ)
+    db_filenames = [os.path.basename(value)
+                for label, value in env_labels.items() 
+                if '_DATABASE_URI' in label]
 
+    if filename in db_filenames:
+        info('Database file requested by user. This is not permitted!')
+        return {'msg': 'It is not allowed to transfer a database file...'}
+
+    # when the user did not provide a filename
     if not filename:
         info("No filename provided by the user. Looking for an environment "
              "variable!")
@@ -63,12 +68,14 @@ def RPC_fetch_static_file(_, filename: str = None):
             warn('Filename is missing!')
             return {'msg': 'Either the node or you should specify a filename!'}
 
+    # check that the file exists
     info(f"Locating static file: {filename}")
     file_ = Path(folder) / filename
     if not file_.exists():
         warn(f'Static file is not found in the expected location {file_}')
         return {'msg': f'Static file {file_} could not be found'}
 
+    # read and return the file
     info('Reading static file')
     try:
         with open(file_, 'rb') as f:
