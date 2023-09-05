@@ -16,10 +16,10 @@
 Collection of tools that can be used on vantage6-nodes.
 
 * `fetch_static_file` - Obtain a static file from the node
-* ...
+* `list_static_files` - List static files on the node
 
 
-## Usage
+## Usage `fetch_static_file`
 ```python
 from vantage6.client import Client
 
@@ -46,10 +46,7 @@ task = client.task.create(
 )
 
 # Retrieve the task information
-task_info = client.task.get(
-  id_=task.get("id"),
-  include_results=True
-)
+task_info = client.task.get(id_=task.get("id"), include_results=True)
 
 # Retrieve the result (file in this case)
 res = client.result.get(task_info['results'][0]['id'])
@@ -61,8 +58,44 @@ with open('name_of_the_static_file.pdf', 'wb') as f:
 
 ```
 
+## Usage `list_static_files`
+```python
+from vantage6.client import Client
+
+# Create, athenticate and setup client
+client = Client("http://127.0.0.1", 5000, "")
+client.authenticate("frank@iknl.nl", "password")
+client.setup_encryption(None)
+
+# Define algorithm input
+input_ = {
+    "method":"list_static_files",
+    "args": [],
+    "kwargs": {'extension': ['.pdf']} # optional argument, otherwise use: "kwargs": {}
+}
+
+# Send the task to the central server
+task = client.task.create(
+    name="testing",
+    image="harbor2.vantage6.ai/algorithms/utils",
+    collaboration=1,
+    input=input_,
+    description="Human readable description",
+    organizations=[2]
+)
+
+# Retrieve the task information
+task_info = client.task.get(id_=task.get("id"), include_results=True)
+
+# Retrieve the result (file in this case)
+res = client.result.get(task_info['results'][0]['id'])
+result = res['result']
+
+```
+
+
 ## Node configuration
-The algorithm looks by default in the `/mnt/data` folder for the file. It is possible to let the algorithm use a different folder by specifying the algorithm environment variable `STATIC_FOLDER`. It is also possible to specify a default file name by setting `STATIC_FILENAME`. Note that the user argument `filename` has priority. Add the block `algorithm_env` to the node configuration file to do so:
+The algorithm looks by default in the `/mnt/data` folder. It is possible to let the algorithm use a different folder by specifying the algorithm environment variable `STATIC_FOLDER`. It is also possible to specify a default file name by setting `STATIC_FILENAME`. Note that the user argument `filename` has priority. Add the block `algorithm_env` to the node configuration file to do so:
 
 ```yaml
   application:
