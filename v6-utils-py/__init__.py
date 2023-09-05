@@ -77,3 +77,15 @@ def RPC_fetch_static_file(_, filename: str = None):
 
     info('Writing contents to output file')
     return contents
+
+
+def RPC_node_online_check(_):
+    """ Check if the node is online
+
+    This method is used to check if the node is online. It is used by the
+    central server to check if the node is online before sending a task to the
+    node. This is done to prevent the central server from sending tasks to
+    nodes that are offline.
+
+    """
+    return True
