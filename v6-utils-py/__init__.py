@@ -52,7 +52,7 @@ def RPC_fetch_static_file(_, filename: str = None):
     # check that the request is not a database file
     env_labels = dict(os.environ)
     db_filenames = [os.path.basename(value)
-                for label, value in env_labels.items() 
+                for label, value in env_labels.items()
                 if '_DATABASE_URI' in label]
 
     if filename in db_filenames:
@@ -91,7 +91,7 @@ def RPC_fetch_static_file(_, filename: str = None):
 def RPC_list_static_files(_, extension: list = None):
     """ List all static files on the data station
 
-    This method returns a dictionary with the filenames and modification 
+    This method returns a dictionary with the filenames and modification
     timestamps of all static files in the /mnt/data folder on the node.
 
     To only list files with a specific extension use the argument `extension`,
@@ -106,19 +106,31 @@ def RPC_list_static_files(_, extension: list = None):
     all_files = os.listdir(folder)
 
     if extension: all_files = [file for file in all_files if file.endswith(tuple(extension))]
-        
+
     files = dict()
     for file in all_files:
 
         path = os.path.join(folder, file)
 
-        # Cross-platform way to get file modification time in Python. 
+        # Cross-platform way to get file modification time in Python.
         # Returns the Unix timestamp of when the file was last modified.
-        c_time = os.path.getmtime(path) 
+        c_time = os.path.getmtime(path)
         dt_c = datetime.datetime.fromtimestamp(c_time)
 
         files[file] = dt_c.strftime("%Y-%m-%d, %H:%M:%S")
-            
+
     info(f"Listed {len(files)} files")
     files = dict(sorted(files.items()))
     return files
+
+
+def RPC_node_online_check(_):
+    """ Check if the node is online
+
+    This method is used to check if the node is online. It is used by the
+    central server to check if the node is online before sending a task to the
+    node. This is done to prevent the central server from sending tasks to
+    nodes that are offline.
+
+    """
+    return True
